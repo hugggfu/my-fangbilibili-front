@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { sendAiMessage, createAiChat, deleteAiChat, getAiChatHistory, getAiChatList } from '@/utils/AiApi'
 
 export const useAiAssistantStore = defineStore('aiAssistant', {
     state: () => ({
@@ -55,58 +56,94 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
             // 显示 AI 正在输入
             this.isTyping = true
 
-            // TODO: 调用后端 API
-            // const response = await sendAiMessage(content, this.currentChatId)
+            // 调用后端 API
+            const result = await sendAiMessage(content, this.currentChatId)
 
-            // 模拟 AI 回复
-            setTimeout(() => {
+            this.isTyping = false
+
+            if (result) {
                 const aiMessage = {
-                    id: Date.now() + 1,
+                    id: result.id || Date.now() + 1,
                     type: 'ai',
-                    content: '你好！我是 EasyLive AI 助手。目前我还在学习中，后续会为你提供更智能的服务。你可以问我关于平台使用、视频推荐、创作建议等问题。',
+                    content: result.content,
                     timestamp: new Date()
                 }
                 this.messages.push(aiMessage)
-                this.isTyping = false
 
-                // 更新对话列表
-                if (this.currentChatId) {
+                // 如果是新对话，更新 ID
+                if (result.chatId && !this.currentChatId) {
+                    this.currentChatId = result.chatId
+                    // 添加到对话列表
+                    this.chatList.unshift({
+                        id: result.chatId,
+                        title: content.substring(0, 10) + '...',
+                        lastMessage: result.content,
+                        timestamp: new Date()
+                    })
+                } else if (this.currentChatId) {
+                    // 更新现有对话列表
                     const chat = this.chatList.find(c => c.id === this.currentChatId)
                     if (chat) {
-                        chat.lastMessage = content
+                        chat.lastMessage = result.content
                         chat.timestamp = new Date()
+
+                        // 如果标题还是默认的"新对话"，则更新为用户发送的内容
+                        if (chat.title === '新对话') {
+                            chat.title = content.length > 10 ? content.substring(0, 10) + '...' : content
+                        }
                     }
                 }
-            }, 1000)
+            } else {
+                // 处理错误
+                this.messages.push({
+                    id: Date.now() + 1,
+                    type: 'system',
+                    content: '发送失败，请稍后重试',
+                    timestamp: new Date()
+                })
+            }
         },
 
         // 创建新对话
-        createNewChat() {
-            const newChat = {
-                id: Date.now(),
-                title: '新对话',
-                lastMessage: '',
-                timestamp: new Date()
+        async createNewChat() {
+            const result = await createAiChat()
+            if (result) {
+                const newChat = {
+                    id: result.id,
+                    title: result.title || '新对话',
+                    lastMessage: '',
+                    timestamp: new Date()
+                }
+                this.chatList.unshift(newChat)
+                this.currentChatId = newChat.id
+                this.messages = []
             }
-            this.chatList.unshift(newChat)
-            this.currentChatId = newChat.id
-            this.messages = []
         },
 
         // 切换对话
-        switchChat(chatId) {
+        async switchChat(chatId) {
             this.currentChatId = chatId
-            // TODO: 从后端加载对话消息
-            // 目前清空消息列表
             this.messages = []
+
+            // 从后端加载对话消息
+            const history = await getAiChatHistory(chatId)
+            if (history) {
+                this.messages = history.map(msg => ({
+                    ...msg,
+                    timestamp: new Date(msg.timestamp)
+                }))
+            }
         },
 
         // 删除对话
-        deleteChat(chatId) {
-            this.chatList = this.chatList.filter(chat => chat.id !== chatId)
-            if (this.currentChatId === chatId) {
-                this.currentChatId = null
-                this.messages = []
+        async deleteChat(chatId) {
+            const result = await deleteAiChat(chatId)
+            if (result) {
+                this.chatList = this.chatList.filter(chat => chat.id !== chatId)
+                if (this.currentChatId === chatId) {
+                    this.currentChatId = null
+                    this.messages = []
+                }
             }
         },
 
@@ -114,6 +151,17 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
         incrementUnread() {
             if (!this.isWindowOpen) {
                 this.unreadCount++
+            }
+        },
+
+        // 加载对话列表
+        async loadChatList() {
+            const list = await getAiChatList()
+            if (list) {
+                this.chatList = list.map(chat => ({
+                    ...chat,
+                    timestamp: new Date(chat.timestamp)
+                }))
             }
         }
     }

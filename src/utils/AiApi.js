@@ -32,6 +32,52 @@ const sendAiMessage = async (message, chatId = null) => {
     return result.data
 }
 
+// 获取对话历史
+const getAiChatHistory = async (chatId) => {
+    let result = await Request({
+        url: AiApi.getChatHistory,
+        params: { chatId },
+    })
+    if (!result) {
+        return null
+    }
+    return result.data
+}
+
+// 获取对话列表
+const getAiChatList = async () => {
+    let result = await Request({
+        url: AiApi.getChatList,
+    })
+    if (!result) {
+        return null
+    }
+    return result.data
+}
+
+// 创建新对话
+const createAiChat = async () => {
+    let result = await Request({
+        url: AiApi.createChat,
+    })
+    if (!result) {
+        return null
+    }
+    return result.data
+}
+
+// 删除对话
+const deleteAiChat = async (chatId) => {
+    let result = await Request({
+        url: AiApi.deleteChat,
+        params: { chatId },
+    })
+    if (!result) {
+        return null
+    }
+    return result.data
+}
+
 // 获取视频推荐
 const getAiVideoRecommend = async (query) => {
     let result = await Request({
@@ -83,6 +129,10 @@ const analyzeUserData = async (timeRange = 'week') => {
 export {
     AiApi,
     sendAiMessage,
+    getAiChatHistory,
+    getAiChatList,
+    createAiChat,
+    deleteAiChat,
     getAiVideoRecommend,
     optimizeVideoTitle,
     suggestVideoTags,

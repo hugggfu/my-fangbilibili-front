@@ -33,13 +33,17 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAiAssistantStore } from '@/stores/aiAssistantStore'
 
 const aiStore = useAiAssistantStore()
 
 const chatList = computed(() => aiStore.chatList)
 const currentChatId = computed(() => aiStore.currentChatId)
+
+onMounted(() => {
+  aiStore.loadChatList()
+})
 
 const handleNewChat = () => {
   aiStore.createNewChat()

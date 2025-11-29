@@ -1,3 +1,4 @@
+
 <template>
   <div class="main-container" :style="{
       'max-width': proxy.bodyMaxWidth + 'px',
@@ -43,6 +44,11 @@
       </div>
     </div>
   </div>
+  
+  <!-- AI 助手 -->
+  <AiFloatButton />
+  <AiChatWindow />
+  
   <Account></Account>
 </template>
 
@@ -60,6 +66,8 @@ const categoryStore = useCategoryStore()
 
 import Category from './Category.vue'
 import LayoutHeader from './LayoutHeader.vue'
+import AiFloatButton from '@/components/AiAssistant/AiFloatButton.vue'
+import AiChatWindow from '@/components/AiAssistant/AiChatWindow.vue'
 import {
   ref,
   reactive,

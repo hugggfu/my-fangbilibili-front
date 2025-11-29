@@ -49,6 +49,10 @@ const router = createRouter({
           path: '/hot',
           name: 'hot',
           component: () => import('@/views/hot/Hot.vue'),
+        }, {
+          path: '/ai-assistant',
+          name: 'AI助手',
+          component: () => import('@/views/aiAssistant/AiAssistant.vue'),
         }
       ]
     },

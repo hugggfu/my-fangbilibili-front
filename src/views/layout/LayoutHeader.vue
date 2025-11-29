@@ -156,6 +156,10 @@
         <div class="iconfont icon-history"></div>
         <div>历史</div>
       </div>
+      <div class="user-panel-item ai-assistant-btn" @click="navJump('/ai-assistant')">
+        <div class="ai-icon">🤖</div>
+        <div>AI助手</div>
+      </div>
       <div class="user-panel-item" @click="navJump('/ucenter/home')">
         <div class="iconfont icon-light"></div>
         <div>创作中心</div>
@@ -544,6 +548,17 @@ const logout = () => {
         text-align: center;
         font-size: 20px;
         font-weight: normal;
+      }
+      .ai-icon {
+        text-align: center;
+        font-size: 20px;
+        transition: transform 0.3s;
+      }
+      &.ai-assistant-btn {
+        position: relative;
+        &:hover .ai-icon {
+          transform: scale(1.2);
+        }
       }
     }
     .btn-upload {

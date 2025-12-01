@@ -109,7 +109,7 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
             const result = await createAiChat()
             if (result) {
                 const newChat = {
-                    id: result.id,
+                    id: result.sessionId,  // 后端返回的是 sessionId
                     title: result.title || '新对话',
                     lastMessage: '',
                     timestamp: new Date()
@@ -129,16 +129,19 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
             const history = await getAiChatHistory(chatId)
             if (history) {
                 this.messages = history.map(msg => ({
-                    ...msg,
-                    timestamp: new Date(msg.timestamp)
+                    id: msg.messageId,  // 后端返回的是 messageId
+                    type: msg.role === 'user' ? 'user' : 'ai',  // 将 role 映射为 type
+                    content: msg.content,
+                    timestamp: new Date(msg.createTime)  // 后端返回的是 createTime
                 }))
             }
         },
 
         // 删除对话
         async deleteChat(chatId) {
-            const result = await deleteAiChat(chatId)
-            if (result) {
+            const success = await deleteAiChat(chatId)
+            if (success) {
+                // 删除成功,立即更新前端列表
                 this.chatList = this.chatList.filter(chat => chat.id !== chatId)
                 if (this.currentChatId === chatId) {
                     this.currentChatId = null
@@ -159,8 +162,10 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
             const list = await getAiChatList()
             if (list) {
                 this.chatList = list.map(chat => ({
-                    ...chat,
-                    timestamp: new Date(chat.timestamp)
+                    id: chat.sessionId,  // 后端返回的是 sessionId,映射为 id
+                    title: chat.title,
+                    lastMessage: '',  // 后端暂时没有返回 lastMessage
+                    timestamp: new Date(chat.updateTime)  // 使用 updateTime
                 }))
             }
         }

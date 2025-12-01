@@ -72,10 +72,8 @@ const deleteAiChat = async (chatId) => {
         url: AiApi.deleteChat,
         params: { chatId },
     })
-    if (!result) {
-        return null
-    }
-    return result.data
+    // 返回是否成功(result 存在且 code 为 200)
+    return result !== null
 }
 
 // 获取视频推荐

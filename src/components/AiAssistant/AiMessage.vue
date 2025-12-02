@@ -11,6 +11,14 @@
     </div>
     <div class="message-content">
       <div class="message-text">{{ message.content }}</div>
+      
+      <!-- 视频推荐卡片 -->
+      <AiVideoCard 
+        v-if="message.messageType === 'video_recommend' && videoList && videoList.length > 0"
+        :videos="videoList" 
+        title=""
+      />
+      
       <div class="message-time">{{ formatTime(message.timestamp) }}</div>
     </div>
   </div>
@@ -20,6 +28,7 @@
 import { computed } from 'vue'
 import { useLoginStore } from '@/stores/loginStore'
 import moment from 'moment'
+import AiVideoCard from './AiVideoCard.vue'
 
 const props = defineProps({
   message: {
@@ -31,6 +40,19 @@ const props = defineProps({
 const loginStore = useLoginStore()
 const userAvatar = computed(() => loginStore.userInfo.avatar)
 const userId = computed(() => loginStore.userInfo.userId)
+
+// 解析视频数据
+const videoList = computed(() => {
+  if (props.message.messageType === 'video_recommend' && props.message.extraData) {
+    try {
+      return JSON.parse(props.message.extraData)
+    } catch (e) {
+      console.error('解析视频数据失败:', e)
+      return []
+    }
+  }
+  return []
+})
 
 const formatTime = (timestamp) => {
   return moment(timestamp).format('HH:mm')
@@ -84,6 +106,7 @@ const formatTime = (timestamp) => {
       line-height: 1.5;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       word-wrap: break-word;
+      white-space: pre-wrap;
     }
     
     .message-time {

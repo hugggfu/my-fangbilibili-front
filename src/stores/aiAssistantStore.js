@@ -63,9 +63,11 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
 
             if (result) {
                 const aiMessage = {
-                    id: result.id || Date.now() + 1,
+                    id: result.messageId || Date.now() + 1,
                     type: 'ai',
                     content: result.content,
+                    messageType: result.messageType || 'text',
+                    extraData: result.extraData || null,
                     timestamp: new Date()
                 }
                 this.messages.push(aiMessage)
@@ -76,7 +78,7 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
                     // 添加到对话列表
                     this.chatList.unshift({
                         id: result.chatId,
-                        title: content.substring(0, 10) + '...',
+                        title: result.title || content.substring(0, 10) + '...',
                         lastMessage: result.content,
                         timestamp: new Date()
                     })
@@ -87,9 +89,9 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
                         chat.lastMessage = result.content
                         chat.timestamp = new Date()
 
-                        // 如果标题还是默认的"新对话"，则更新为用户发送的内容
-                        if (chat.title === '新对话') {
-                            chat.title = content.length > 10 ? content.substring(0, 10) + '...' : content
+                        // 更新标题
+                        if (result.title) {
+                            chat.title = result.title
                         }
                     }
                 }
@@ -109,7 +111,7 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
             const result = await createAiChat()
             if (result) {
                 const newChat = {
-                    id: result.sessionId,  // 后端返回的是 sessionId
+                    id: result.sessionId,
                     title: result.title || '新对话',
                     lastMessage: '',
                     timestamp: new Date()
@@ -129,10 +131,12 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
             const history = await getAiChatHistory(chatId)
             if (history) {
                 this.messages = history.map(msg => ({
-                    id: msg.messageId,  // 后端返回的是 messageId
-                    type: msg.role === 'user' ? 'user' : 'ai',  // 将 role 映射为 type
+                    id: msg.messageId,
+                    type: msg.role === 'user' ? 'user' : 'ai',
                     content: msg.content,
-                    timestamp: new Date(msg.createTime)  // 后端返回的是 createTime
+                    messageType: msg.messageType || 'text',
+                    extraData: msg.extraData || null,
+                    timestamp: new Date(msg.createTime)
                 }))
             }
         },
@@ -141,7 +145,6 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
         async deleteChat(chatId) {
             const success = await deleteAiChat(chatId)
             if (success) {
-                // 删除成功,立即更新前端列表
                 this.chatList = this.chatList.filter(chat => chat.id !== chatId)
                 if (this.currentChatId === chatId) {
                     this.currentChatId = null
@@ -162,10 +165,10 @@ export const useAiAssistantStore = defineStore('aiAssistant', {
             const list = await getAiChatList()
             if (list) {
                 this.chatList = list.map(chat => ({
-                    id: chat.sessionId,  // 后端返回的是 sessionId,映射为 id
+                    id: chat.sessionId,
                     title: chat.title,
-                    lastMessage: '',  // 后端暂时没有返回 lastMessage
-                    timestamp: new Date(chat.updateTime)  // 使用 updateTime
+                    lastMessage: '',
+                    timestamp: new Date(chat.updateTime)
                 }))
             }
         }
